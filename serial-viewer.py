@@ -3,11 +3,14 @@ import time
 import argparse
 import tkinter as tk
 import threading # in python std lib
-state=0
-channel = 'X'
-buff=""
-
-def win_insert(d):
+buffA=""
+buffB=""
+buffC=""
+buffX=""
+program_end = False
+lock = threading.Lock()
+def win_insert(d,channel):
+    lock.acquire()
     #print(channel," len=",len(buff))
     #print(buff)
     if channel == 'A':
@@ -30,22 +33,47 @@ def win_insert(d):
         log4.insert(tk.END, d)
         log4.see(tk.END)
         log4.config(state=tk.DISABLED)
+    lock.release()
+
+def window_update():
+    if len(buffA)>0:
+        win_insert(buffA,'A')
+    if len(buffB)>0:
+        win_insert(buffB,'B')
+    if len(buffC)>0:
+        win_insert(buffC,'C')
+    if len(buffX)>0:
+        win_insert(buffX,'X')
+    pass
+    root.after(500,window_update)
+def append_to_buffer(d,channel):
+    global buffA
+    global buffB
+    global buffC
+    global buffX
+    if channel=='A':
+        buffA = buffA+d
+    if channel=='B':
+        buffB = buffB+d
+    if channel=='C':
+        buffC = buffC+d
+    if channel=='X':
+        buffX = buffX+d
 def serial_read():
-    global state
-    global channel
-    global buff
+    state=0
+    channel = 'X'
     #print("reading")
     while True:
         e = ser.read()
-        if len(e)==0:
+        if program_end:
+            print('the end')
             break
         try:
             d = e.decode('utf-8')
         except:
-            state=0
-            d=''
-            break
-        #print(d,end='')
+            #state=0
+            d='?'
+        print(d,state)
         match state:
             case 0:
                 if d == '/':
@@ -53,6 +81,8 @@ def serial_read():
                 pass
             case 5:
                 if d == '*':
+                    state=10
+                elif d=='/':
                     state=10
                 else:
                     state=0
@@ -66,19 +96,22 @@ def serial_read():
                     dp = d
                     state=30
                 else:
-                    buff = buff+d
+                    append_to_buffer(d, channel)
                 pass
             case 30:
                 if d=='/':
                     state=0
-                    buff = buff+"\r\n"
-                    win_insert(buff)
-                    buff=""
+                    #buff = buff+"\r\n"
+                    #print(buff)
+                    #win_insert(buff)
+                    #buff=""
+                elif d=='*':
+                    state=30
+                    append_to_buffer(dp, channel)
                 else:
                     state=20
-                    buff = buff + dp + d
+                    append_to_buffer(dp + d, channel)
                 pass
-    root.after(100,serial_read)
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
@@ -93,13 +126,13 @@ if __name__=='__main__':
         print("Channel can be single character")
         exit()
     seconds_stop= time.time()+1*seconds
-    ser = serial.Serial( com_port ,9600, timeout=0.01, writeTimeout=0)
+    ser = serial.Serial( com_port ,9600)
     #-------------------------------------
     # Tk inter config
     import tkinter as tk
     #make a TkInter Window
     root = tk.Tk()
-    root.wm_title("Reading Serial")
+    root.wm_title("Serial-Viewer")
 
     # make a scrollbar
     scbar1 = tk.Scrollbar(root)
@@ -131,5 +164,9 @@ if __name__=='__main__':
     # end of Tk inter
     #-------------------------------------
     print("Start Time since epoch =", time.time())
-    root.after(500, serial_read)
+    t1 = threading.Thread(target=serial_read)
+    t1.start()
+    root.after(100, window_update)
     root.mainloop()
+    program_end=True
+    t1.join()
