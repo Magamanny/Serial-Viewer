@@ -2,11 +2,14 @@ import serial
 import time
 import argparse
 import tkinter as tk
-
+import threading # in python std lib
 state=0
 channel = 'X'
 buff=""
+
 def win_insert(d):
+    #print(channel," len=",len(buff))
+    #print(buff)
     if channel == 'A':
         log1.config(state=tk.NORMAL)
         log1.insert(tk.END, d)
@@ -22,6 +25,11 @@ def win_insert(d):
         log3.insert(tk.END, d)
         log3.see(tk.END)
         log3.config(state=tk.DISABLED)
+    elif channel=='X':
+        log4.config(state=tk.NORMAL)
+        log4.insert(tk.END, d)
+        log4.see(tk.END)
+        log4.config(state=tk.DISABLED)
 def serial_read():
     global state
     global channel
@@ -100,13 +108,25 @@ if __name__=='__main__':
     log1 = tk.Text ( root, width=30, height=30, takefocus=0)
     log2 = tk.Text ( root, width=30, height=30, takefocus=0)
     log3 = tk.Text ( root, width=30, height=30, takefocus=0)
+    log4 = tk.Text ( root, width=30, height=30, takefocus=0)
+    # Text
+    lable1 = tk.Label(text="Channel A")
+    lable2 = tk.Label(text="Channel B")
+    lable3 = tk.Label(text="Channel C")
+    lable4 = tk.Label(text="Channel X")
     # attach text box to scrollbar
     log1.config(yscrollcommand=scbar1.set)
     scbar1.config(command=log1.yview)
 
-    log1.grid(column=0, row=0)   # grid dynamically divides the space in a grid
-    log2.grid(column=1, row=0)
-    log3.grid(column=2, row=0)
+    log1.grid(column=0, row=1)   # grid dynamically divides the space in a grid
+    log2.grid(column=1, row=1)
+    log3.grid(column=2, row=1)
+    log4.grid(column=3, row=1)
+
+    lable1.grid(column=0,row=0)
+    lable2.grid(column=1,row=0)
+    lable3.grid(column=2,row=0)
+    lable4.grid(column=3,row=0)
     #scbar1.grid(column=1, row=0)   # and arranges widgets accordingly
     # end of Tk inter
     #-------------------------------------
