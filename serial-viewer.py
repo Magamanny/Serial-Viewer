@@ -10,7 +10,6 @@ buffX=""
 program_end = False
 lock = threading.Lock()
 def win_insert(d,channel):
-    lock.acquire()
     #print(channel," len=",len(buff))
     #print(buff)
     if channel == 'A':
@@ -33,17 +32,26 @@ def win_insert(d,channel):
         log4.insert(tk.END, d)
         log4.see(tk.END)
         log4.config(state=tk.DISABLED)
-    lock.release()
 
 def window_update():
+    global buffA
+    global buffB
+    global buffC
+    global buffX
+    lock.acquire()
     if len(buffA)>0:
         win_insert(buffA,'A')
+        buffA=""
     if len(buffB)>0:
         win_insert(buffB,'B')
+        buffB=""
     if len(buffC)>0:
         win_insert(buffC,'C')
+        buffC=""
     if len(buffX)>0:
         win_insert(buffX,'X')
+        buffX=""
+    lock.release()
     pass
     root.after(500,window_update)
 def append_to_buffer(d,channel):
@@ -51,6 +59,7 @@ def append_to_buffer(d,channel):
     global buffB
     global buffC
     global buffX
+    lock.acquire()
     if channel=='A':
         buffA = buffA+d
     if channel=='B':
@@ -59,6 +68,7 @@ def append_to_buffer(d,channel):
         buffC = buffC+d
     if channel=='X':
         buffX = buffX+d
+    lock.release()
 def serial_read():
     state=0
     channel = 'X'
@@ -73,7 +83,9 @@ def serial_read():
         except:
             #state=0
             d='?'
-        print(d,state)
+        if d is not '':
+            #print(d,state, end=' | ')
+            pass
         match state:
             case 0:
                 if d == '/':
@@ -126,7 +138,7 @@ if __name__=='__main__':
         print("Channel can be single character")
         exit()
     seconds_stop= time.time()+1*seconds
-    ser = serial.Serial( com_port ,9600)
+    ser = serial.Serial( com_port ,9600,timeout=0.1)
     #-------------------------------------
     # Tk inter config
     import tkinter as tk
