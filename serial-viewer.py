@@ -53,7 +53,7 @@ def window_update():
         buffX=""
     lock.release()
     pass
-    root.after(500,window_update)
+    root.after(250,window_update)
 def append_to_buffer(d,channel):
     global buffA
     global buffB
@@ -83,7 +83,7 @@ def serial_read():
         except:
             #state=0
             d='?'
-        if d is not '':
+        if d != '':
             #print(d,state, end=' | ')
             pass
         match state:
@@ -124,7 +124,6 @@ def serial_read():
                     state=20
                     append_to_buffer(dp + d, channel)
                 pass
-
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--time", help="Time in seconds", type=int, default=10)
@@ -153,7 +152,7 @@ if __name__=='__main__':
     log1 = tk.Text ( root, width=30, height=30, takefocus=0)
     log2 = tk.Text ( root, width=30, height=30, takefocus=0)
     log3 = tk.Text ( root, width=30, height=30, takefocus=0)
-    log4 = tk.Text ( root, width=30, height=30, takefocus=0)
+    log4 = tk.Text ( root, width=50, height=30, takefocus=0)
     # Text
     lable1 = tk.Label(text="Channel A")
     lable2 = tk.Label(text="Channel B")
@@ -163,15 +162,15 @@ if __name__=='__main__':
     log1.config(yscrollcommand=scbar1.set)
     scbar1.config(command=log1.yview)
 
-    log1.grid(column=0, row=1)   # grid dynamically divides the space in a grid
-    log2.grid(column=1, row=1)
-    log3.grid(column=2, row=1)
-    log4.grid(column=3, row=1)
-
     lable1.grid(column=0,row=0)
     lable2.grid(column=1,row=0)
     lable3.grid(column=2,row=0)
     lable4.grid(column=3,row=0)
+
+    log1.grid(column=0, row=1)   # grid dynamically divides the space in a grid
+    log2.grid(column=1, row=1)
+    log3.grid(column=2, row=1)
+    log4.grid(column=3, row=1)
     #scbar1.grid(column=1, row=0)   # and arranges widgets accordingly
     # end of Tk inter
     #-------------------------------------
